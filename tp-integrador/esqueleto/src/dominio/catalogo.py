@@ -5,7 +5,7 @@ from pokemon import Pokemon
 def cargar_catalogo(nombre_archivo):
     pokemons = []
 
-    with open(nombre_archivo, "r", encoding="utf-8") as archivo:
+    with open(nombre_archivo, "r") as archivo:
         lector = csv.reader(archivo)
 
         next(lector)  # Saltea la primera fila, que es el encabezado
