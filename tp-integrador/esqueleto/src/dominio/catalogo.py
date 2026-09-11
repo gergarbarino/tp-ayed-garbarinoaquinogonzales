@@ -8,7 +8,7 @@ def cargar_catalogo(nombre_archivo):
     with open(nombre_archivo, "r") as archivo:
         lector = csv.reader(archivo)
 
-        next(lector)  # Saltea la primera fila, que es el encabezado
+        next(lector)  # Saltea el encabezado (nombre, tipo, etc)
 
         for fila in lector:
             numero = int(fila[0])
