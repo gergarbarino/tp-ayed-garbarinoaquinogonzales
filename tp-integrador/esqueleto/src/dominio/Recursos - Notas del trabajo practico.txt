@@ -1,0 +1,113 @@
+Lo primero que debe hacerse es cuestionar para que sirve la pokedex.
+
+Es un objeto que puede conseguir la información de determinado Pokémon tal como cantidad de ataque, vida, tipo de pokémon, etc y luego por pantalla mostrar la información del Pokémon elegido mediante un ID.
+
+
+Preguntas sobre Pokédex:
+
+
+¿Para que sirve la Pokédex?
+
+Es un objeto que puede conseguir información de determinado Pokémon.
+
+¿Cómo identifico al Pokémon?
+
+Lo mas lógico seria identificarlos por ID, por ejemplo: Si seleccionamos el ID: 94 podríamos indicar que en la lista de Pokémon
+entenderíamos que debería mostrar información respecto al Pokémon Gengar.
+
+¿Qué información debo guardar?
+
+Debería guardar información acorde a lo registrado en pokédex.csv. P.E.:
+
+id,nombre,tipo1,tipo2,hp,ataque,defensa,velocidad,generación
+
+94,Gengar,Fantasma,Veneno,60,65,60,110,1
+
+¿Cómo muestro esta información?
+
+Lo correcto seria mostrar la información ordenada, de mayor a menor importancia, a continuación dejaremos un ejemplo sobre Gengar:
+
+ID: 94
+Nombre: Gengar
+Tipo 1: Fantasma
+Tipo 2: Veneno
+HP: 60
+Ataque: 65
+Defensa: 60
+velocidad: 110
+Generación: 1
+
+¿Qué hago si el Pokémon no existe?
+
+Si el Pokémon no existe, como por ejemplo si apuntaríamos a un perro, este no seria un Pokémon. La forma sencilla seria arrojar en pantalla que el ID indicado no esta en la lista o no pertenece a un Pokémon.
+
+
+
+¿Qué operaciones tiene que permitir hacer nuestra Pokédex?
+
+1- Buscar por ID un Pokémon.
+2- Buscar al Pokémon por nombre.
+3- Mostrar todos los Pokémon.
+5- Agregar un Pokémon.
+6- Modificar un Pokémon.
+7- Eliminar Pokémon.
+8- Salir.
+
+
+Entrega: 20/09
+
+# Integrantes:
+
+- Germán Garbarino
+- Alexis Gonzales
+- Priscila Aquino
+
+
+¿Qué puede hacer la Pokédex?
+
+Hasta el momento, el programa permite:
+
+- Cargar los datos de los Pokémon desde un archivo CSV.
+- Crear objetos "Pokémon" a partir de los datos obtenidos.
+- Buscar un Pokémon mediante su ID.
+- Mostrar la información del Pokémon encontrado.
+- Cargar las relaciones de evolución desde otro archivo CSV.
+- Recorrer la cadena evolutiva de un Pokémon.
+- Continuar ejecutándose para realizar nuevas búsquedas.
+- Finalizar el programa escribiendo "apagar".
+
+---
+
+# Organización del proyecto:
+
+Actualmente el proyecto está organizado de la siguiente manera:
+
+├── main.py
+├── catalogo.py
+├── pokemon.py
+├── evoluciones.py
+│
+└── docs/
+    └── data/
+        ├── pokedex.csv
+        └── evoluciones.csv
+
+
+
+# LOGICA DE EVOLUCIONES:
+
+Las evoluciones de los Pokémon se almacenan en un archivo CSV mediante pares de identificadores, donde "origen_id" representa al Pokémon actual y "destino_id" representa al Pokémon al que evoluciona.
+
+Al ingresar el ID de un Pokémon, el programa primero lo busca dentro del catálogo. Una vez encontrado, utiliza su ID como "id_actual" y recorre la lista de evoluciones buscando un registro cuyo "origen_id" coincida con dicho ID.
+
+Cuando encuentra una coincidencia, obtiene el "destino_id", busca ese Pokémon dentro del catálogo y muestra la evolución. Luego, el "id_actual" se actualiza con el ID del Pokémon encontrado y el proceso se repite para comprobar si posee una nueva evolución.
+
+El recorrido finaliza cuando no se encuentra ninguna evolución asociada al Pokémon actual.
+
+De esta manera, el programa puede recorrer una cadena evolutiva completa, por ejemplo:
+
+`Pokémon inicial → Primera evolución → Segunda evolución`
+
+La información de las evoluciones se obtiene directamente del archivo "evoluciones.csv", evitando que las relaciones entre Pokémon estén escritas directamente en el código.
+
+
