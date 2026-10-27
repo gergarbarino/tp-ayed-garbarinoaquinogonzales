@@ -42,13 +42,31 @@ Cola: se utiliza para gestionar los turnos de atención.
 
 | Operación | Tiempo | Espacio | Por qué |
 | --- | --- | --- | --- |
-|  |  |  |  |
+| Búsqueda lineal | O(n) | O(1) | En el peor caso recorre todos los elementos para encontrar el buscado. |
+| Búsqueda binaria | O(log n) | O(1) | En cada iteración descarta la mitad de los elementos restantes. Requiere datos previamente ordenados. |
+| Ordenamiento por selección | O(n²) | O(n) | Busca el menor en cada pasada mediante dos ciclos anidados. Crea una copia de la colección. |
+| Ordenamiento por inserción | O(n²) | O(n) | En el peor caso desplaza varios elementos por cada inserción. Crea una copia de la colección. |
 
 Mediciones (`time.perf_counter`):
 
 | Operación | n | segundos |
 | --- | --- | --- |
-|  |  |  |
+| Búsqueda lineal | 70 | 0.000002198 |
+| Búsqueda lineal | 700 | 0.000021069 |
+| Búsqueda binaria | 70 | 0.000000572 |
+| Búsqueda binaria | 700 | 0.000000865 |
+| Ordenamiento por selección | 70 | 0.000112107 |
+| Ordenamiento por selección | 700 | 0.015519662 |
+| Ordenamiento por inserción | 70 | 0.000005118 |
+| Ordenamiento por inserción | 700 | 0.014697012 |
+
+Análisis de las mediciones (E4)
+
+Para realizar las pruebas se utilizó un catálogo de 70 Pokémon y una colección ampliada de 700 elementos, obtenida mediante la repetición del catálogo original diez veces. Cada algoritmo se ejecutó 10.000 veces y se calculó su tiempo promedio mediante time.perf_counter().
+
+La búsqueda lineal presentó un aumento de tiempo aproximadamente proporcional a la cantidad de elementos. La búsqueda binaria tuvo un crecimiento mucho menor, ya que reduce el espacio de búsqueda en cada iteración. Para esta comparación, el catálogo se ordenó previamente y el tiempo de ordenamiento no se incluyó en la medición de búsqueda.
+
+Los algoritmos de selección e inserción presentaron aumentos de tiempo más importantes. Selección realiza comparaciones mediante ciclos anidados, mientras que inserción depende del orden inicial de los elementos. Las mediciones son consistentes con las características de complejidad estudiadas, aunque los tiempos concretos pueden variar según los datos y la ejecución.
 
 ## 6. Persistencia (E5)
 

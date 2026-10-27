@@ -4,27 +4,51 @@ from src.tads.pila import Pila
 from src.tads.cola import Cola
 from src.excepciones import ColeccionLlenaError, PilaVaciaError, ColaVaciaError
 
+from src.algoritmos.busqueda import busqueda_lineal, busqueda_binaria
+from src.algoritmos.ordenamiento import ordenar_seleccion, ordenar_insercion
+
 catalogo = cargar_catalogo()
 
 
 def buscar_pokemon(catalogo):
-    entrada = input("Ingrese el ID del Pokémon: ")
+    print("1. Búsqueda Lineal")
+    print("2. Búsqueda Binaria")
+    tipo = input("Elija opción: ").strip()
+
+    print("1. Buscar por ID")
+    print("2. Buscar por Nombre")
+    criterio = input("Elija opción: ").strip()
+
+    if criterio == "2":
+        entrada = input("Ingrese el nombre del Pokémon: ").strip()
+        clave = entrada.lower()
+        obtener_clave = lambda p: p.nombre.lower()
+    else:
+        entrada = input("Ingrese el ID del Pokémon: ").strip()
+
+        if not entrada.isdigit():
+            print("Debe ingresar un ID numérico.")
+            return True
+
+        clave = int(entrada)
+        obtener_clave = lambda p: p.numero
 
     if entrada.lower() == "apagar":
-        return False
+        return True
 
-    id_buscado = int(entrada)
+    datos = list(catalogo)
 
-    pokemon_encontrado = False
+    if tipo == "2":
+        datos = ordenar_insercion(datos, obtener_clave)
+        indice = busqueda_binaria(datos, clave, obtener_clave)
+    else:
+        indice = busqueda_lineal(datos, clave, obtener_clave)
 
-    for pokemon in catalogo:
-        if id_buscado == pokemon.numero:
-            print(pokemon)
-            pokemon_encontrado = True
-            break
-
-    if pokemon_encontrado == False:
-        print("No se encontró un Pokémon con ese ID.")
+    if indice is not None:
+        pokemon = datos[indice]
+        print(f"¡Encontrado!: {pokemon}")
+    else:
+        print("No se encontró un Pokémon con ese dato.")
 
     return True
 
@@ -38,7 +62,8 @@ def menu_coleccion(equipo, pila_historial, cola_turnos, catalogo):
         print("3. Deshacer (pila)")
         print("4. Siguiente turno (cola)")
         print("5. Buscar Pokémon")
-        print("0. Volver")
+        print("6. Ordenar catálogo")
+        print("0. Salir")
 
         opcion = input("> ").strip()
 
@@ -47,23 +72,26 @@ def menu_coleccion(equipo, pila_historial, cola_turnos, catalogo):
 
         elif opcion == "1":
             entrada = input("Ingrese el ID del Pokémon: ").strip()
-            id_buscado = int(entrada)
 
-            pokemon_encontrado = None
+            if entrada.isdigit():
+                id_buscado = int(entrada)
 
-            for pokemon in catalogo:
-                if pokemon.numero == id_buscado:
-                    pokemon_encontrado = pokemon
-                    break
+                datos = list(catalogo)
 
-            if pokemon_encontrado is None:
-                print("No se encontró un Pokémon con ese ID.")
-            else:
-                try:
-                    equipo.agregar(pokemon_encontrado)
-                    print(f"Agregado: {pokemon_encontrado}")
-                except ColeccionLlenaError as e:
-                    print(f"Error: {e}")
+                indice = busqueda_lineal(
+                    datos, id_buscado, lambda p: p.numero
+                )
+
+                if indice is None:
+                    print("No se encontró un Pokémon con ese ID.")
+                else:
+                    pokemon_encontrado = datos[indice]
+
+                    try:
+                        equipo.agregar(pokemon_encontrado)
+                        print(f"Agregado: {pokemon_encontrado}")
+                    except ColeccionLlenaError as e:
+                        print(f"Error: {e}")
 
         elif opcion == "2":
             equipo.listar()
@@ -84,6 +112,17 @@ def menu_coleccion(equipo, pila_historial, cola_turnos, catalogo):
 
         elif opcion == "5":
             buscar_pokemon(catalogo)
+
+        elif opcion == "6":
+            print("1. Ordenar por ID (Selección)")
+            print("2. Ordenar por Nombre (Inserción)")
+            metodo = input("> ").strip()
+            if metodo == "1":
+                catalogo = ordenar_seleccion(catalogo, lambda p: p.numero)
+                print("Catálogo ordenado por ID (Selección).")
+            elif metodo == "2":
+                catalogo = ordenar_insercion(catalogo, lambda p: p.nombre)
+                print("Catálogo ordenado por Nombre (Inserción).")
 
 
 equipo = Equipo()
