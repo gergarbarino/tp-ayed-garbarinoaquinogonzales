@@ -1,5 +1,4 @@
 from src.catalogo import cargar_catalogo
-from src.equipo import Equipo
 from src.tads.pila import Pila
 from src.tads.cola import Cola
 
@@ -13,6 +12,14 @@ from src.excepciones import (
 from src.algoritmos.busqueda import busqueda_lineal, busqueda_binaria
 from src.algoritmos.ordenamiento import ordenar_seleccion, ordenar_insercion
 
+from src.dominio.listado import listar_catalogo, ver_detalle
+
+# E2: Recursividad de evoluciones
+from src.dominio.evoluciones import (
+    cargar_evoluciones,
+    mostrar_evoluciones_recursivas
+)
+
 # E5: Persistencia de archivos
 from src.dominio.pokedex import (
     armar_catalogo_desde_txt,
@@ -22,13 +29,8 @@ from src.dominio.pokedex import (
 )
 
 from src.persistencia.texto import guardar_texto
+from src.persistencia.binario import guardar_binario, cargar_binario
 
-from src.persistencia.binario import (
-    guardar_binario,
-    cargar_binario
-)
-
-# E5: Persistencia del equipo
 from src.persistencia.equipo_archivo import (
     guardar_equipo_binario,
     cargar_equipo_binario,
@@ -36,16 +38,30 @@ from src.persistencia.equipo_archivo import (
 )
 
 
-# Catálogo inicial
 catalogo = cargar_catalogo()
 
-# E5: Ruta del archivo binario
 RUTA_BIN = RUTA_POKEDEX.with_suffix(".bin")
+
+
+def obtener_pokemon_por_id(catalogo, id_buscado):
+
+    datos = list(catalogo)
+
+    indice = busqueda_lineal(
+        datos,
+        id_buscado,
+        lambda p: p.numero
+    )
+
+    if indice is None:
+        return None
+
+    return datos[indice]
 
 
 def buscar_pokemon(catalogo):
 
-    print("1. Búsqueda Lineal")
+    print("\n1. Búsqueda Lineal")
     print("2. Búsqueda Binaria")
 
     tipo = input("Elija opción: ").strip()
@@ -69,13 +85,10 @@ def buscar_pokemon(catalogo):
         if not entrada.isdigit():
 
             print("Debe ingresar un ID numérico.")
-            return True
+            return
 
         clave = int(entrada)
         obtener_clave = lambda p: p.numero
-
-    if entrada.lower() == "apagar":
-        return True
 
     datos = list(catalogo)
 
@@ -99,30 +112,232 @@ def buscar_pokemon(catalogo):
 
     if indice is not None:
 
-        pokemon = datos[indice]
-
-        print(f"¡Encontrado!: {pokemon}")
+        print(f"¡Encontrado!: {datos[indice]}")
 
     else:
 
         print("No se encontró un Pokémon con ese dato.")
 
-    return True
+
+def menu_equipo(equipo, catalogo):
+
+    while True:
+
+        print("\n========== ADMINISTRAR EQUIPO ==========")
+        print("1. Agregar Pokémon")
+        print("2. Listar equipo")
+        print("3. Eliminar Pokémon")
+        print("4. Modificar HP")
+        print("0. Volver")
+
+        opcion = input("> ").strip()
+
+        if opcion == "0":
+
+            return equipo
+
+        elif opcion == "1":
+
+            entrada = input("Ingrese el ID del Pokémon: ").strip()
+
+            if not entrada.isdigit():
+
+                print("Debe ingresar un ID numérico.")
+                continue
+
+            id_buscado = int(entrada)
+
+            pokemon = obtener_pokemon_por_id(catalogo, id_buscado)
+
+            if pokemon is None:
+
+                print("No se encontró un Pokémon con ese ID.")
+
+            else:
+
+                try:
+
+                    equipo.agregar(pokemon)
+
+                    guardar_equipo_binario(equipo)
+
+                    print(f"Agregado: {pokemon}")
+                    print("Equipo guardado correctamente.")
+
+                except ColeccionLlenaError as error:
+
+                    print(f"Error: {error}")
+
+                except (ArchivoInvalidoError, OSError) as error:
+
+                    print(f"No se pudo guardar el equipo: {error}")
+
+        elif opcion == "2":
+
+            equipo.listar()
+
+        elif opcion == "3":
+
+            entrada = input("Ingrese el ID del Pokémon a eliminar: ").strip()
+
+            if not entrada.isdigit():
+
+                print("Debe ingresar un ID numérico.")
+                continue
+
+            id_buscado = int(entrada)
+
+            pokemon_a_eliminar = None
+
+            for pokemon in equipo:
+
+                if pokemon.numero == id_buscado:
+
+                    pokemon_a_eliminar = pokemon
+                    break
+
+            if pokemon_a_eliminar is None:
+
+                print("Ese Pokémon no se encuentra en el equipo.")
+
+            else:
+
+                equipo.eliminar(pokemon_a_eliminar)
+
+                try:
+
+                    guardar_equipo_binario(equipo)
+
+                    print(f"Pokémon eliminado: {pokemon_a_eliminar}")
+                    print("Cambio guardado correctamente.")
+
+                except (ArchivoInvalidoError, OSError) as error:
+
+                    print(f"No se pudo guardar el cambio: {error}")
+
+        elif opcion == "4":
+
+            entrada = input("Ingrese el ID del Pokémon a modificar: ").strip()
+
+            if not entrada.isdigit():
+
+                print("Debe ingresar un ID numérico.")
+                continue
+
+            id_buscado = int(entrada)
+
+            entrada_hp = input("Ingrese el nuevo HP: ").strip()
+
+            if not entrada_hp.isdigit():
+
+                print("El HP debe ser un número entero positivo.")
+                continue
+
+            nuevo_hp = int(entrada_hp)
+
+            try:
+
+                modificado = modificar_hp_equipo(
+                    id_buscado,
+                    nuevo_hp
+                )
+
+                if modificado:
+
+                    equipo = cargar_equipo_binario()
+
+                    print("HP modificado correctamente.")
+                    print("Cambio guardado en el archivo binario.")
+
+                else:
+
+                    print("Ese Pokémon no se encuentra en el equipo.")
+
+            except (ValueError, ArchivoInvalidoError, OSError) as error:
+
+                print(f"Error al modificar el Pokémon: {error}")
+
+        else:
+
+            print("Opción inválida.")
 
 
-def menu_coleccion(equipo, pila_historial, cola_turnos, catalogo):
+def menu_archivos(catalogo):
+
+    print("\n========== ARCHIVOS ==========")
+    print("1. Cargar catálogo desde TXT")
+    print("2. Guardar catálogo en TXT")
+    print("3. Guardar catálogo en binario")
+    print("4. Cargar catálogo desde binario")
+    print("0. Volver")
+
+    opcion = input("> ").strip()
+
+    try:
+
+        if opcion == "1":
+
+            catalogo = armar_catalogo_desde_txt()
+
+            print(
+                f"Catálogo cargado desde TXT: "
+                f"{catalogo.tamanio()} Pokémon."
+            )
+
+        elif opcion == "2":
+
+            filas = filas_del_catalogo(catalogo)
+
+            guardar_texto(
+                RUTA_POKEDEX,
+                filas,
+                ENCABEZADOS
+            )
+
+            print("Catálogo guardado correctamente en TXT.")
+
+        elif opcion == "3":
+
+            guardar_binario(
+                RUTA_BIN,
+                catalogo
+            )
+
+            print("Catálogo guardado correctamente en binario.")
+
+        elif opcion == "4":
+
+            catalogo = cargar_binario(RUTA_BIN)
+
+            print(
+                f"Catálogo cargado desde binario: "
+                f"{catalogo.tamanio()} Pokémon."
+            )
+
+        elif opcion != "0":
+
+            print("Opción inválida.")
+
+    except ArchivoInvalidoError as error:
+
+        print(f"Error de archivo: {error}")
+
+    return catalogo
+
+
+def menu_principal(equipo, pila_historial, cola_turnos, catalogo):
 
     while True:
 
         print("\n========== POKÉDEX ==========")
-        print("1. Agregar al equipo")
-        print("2. Listar equipo")
-        print("3. Deshacer (pila)")
-        print("4. Siguiente turno (cola)")
-        print("5. Buscar Pokémon")
-        print("6. Ordenar catálogo")
-        print("7. Eliminar Pokémon del equipo")
-        print("8. Modificar HP de un Pokémon")
+        print("1. Listar catálogo")
+        print("2. Ver detalle de un Pokémon")
+        print("3. Buscar Pokémon")
+        print("4. Ordenar catálogo")
+        print("5. Evoluciones (recursividad)")
+        print("6. Administrar equipo")
+        print("7. Historial (pila)")
+        print("8. Turnos (cola)")
         print("9. Guardar / cargar archivos")
         print("0. Salir")
 
@@ -134,81 +349,27 @@ def menu_coleccion(equipo, pila_historial, cola_turnos, catalogo):
 
         elif opcion == "1":
 
-            entrada = input("Ingrese el ID del Pokémon: ").strip()
-
-            if entrada.isdigit():
-
-                id_buscado = int(entrada)
-
-                datos = list(catalogo)
-
-                indice = busqueda_lineal(
-                    datos,
-                    id_buscado,
-                    lambda p: p.numero
-                )
-
-                if indice is None:
-
-                    print("No se encontró un Pokémon con ese ID.")
-
-                else:
-
-                    pokemon_encontrado = datos[indice]
-
-                    try:
-
-                        equipo.agregar(pokemon_encontrado)
-
-                        guardar_equipo_binario(equipo)
-
-                        print(f"Agregado: {pokemon_encontrado}")
-                        print("Equipo guardado correctamente.")
-
-                    except ColeccionLlenaError as e:
-
-                        print(f"Error: {e}")
-
-                    except (ArchivoInvalidoError, OSError) as e:
-
-                        print(
-                            f"El Pokémon se agregó al equipo, "
-                            f"pero no se pudo guardar: {e}"
-                        )
+            listar_catalogo(catalogo)
 
         elif opcion == "2":
 
-            equipo.listar()
+            entrada = input("Ingrese el ID del Pokémon: ").strip()
+
+            try:
+
+                id_buscado = int(entrada)
+
+                ver_detalle(catalogo, id_buscado)
+
+            except ValueError:
+
+                print("Debe ingresar un ID numérico.")
 
         elif opcion == "3":
 
-            try:
-
-                item = pila_historial.desapilar()
-
-                print(f"Deshecho: {item}")
-
-            except PilaVaciaError as e:
-
-                print(f"Error: {e}")
-
-        elif opcion == "4":
-
-            try:
-
-                item = cola_turnos.desencolar()
-
-                print(f"Turno atendido: {item}")
-
-            except ColaVaciaError as e:
-
-                print(f"Error: {e}")
-
-        elif opcion == "5":
-
             buscar_pokemon(catalogo)
 
-        elif opcion == "6":
+        elif opcion == "4":
 
             print("1. Ordenar por ID (Selección)")
             print("2. Ordenar por Nombre (Inserción)")
@@ -233,163 +394,177 @@ def menu_coleccion(equipo, pila_historial, cola_turnos, catalogo):
 
                 print("Catálogo ordenado por Nombre (Inserción).")
 
-        # E5: Eliminar un Pokémon del equipo
+            else:
+
+                print("Opción inválida.")
+
+        # E2: Recursividad
+        elif opcion == "5":
+
+            entrada = input("Ingrese el ID del Pokémon: ").strip()
+
+            if not entrada.isdigit():
+
+                print("Debe ingresar un ID numérico.")
+
+            else:
+
+                id_buscado = int(entrada)
+
+                pokemon = obtener_pokemon_por_id(
+                    catalogo,
+                    id_buscado
+                )
+
+                if pokemon is None:
+
+                    print("No se encontró un Pokémon con ese ID.")
+
+                else:
+
+                    try:
+
+                        relaciones = cargar_evoluciones()
+
+                        print("\n========== EVOLUCIONES ==========")
+
+                        mostrar_evoluciones_recursivas(
+                            id_buscado,
+                            catalogo,
+                            relaciones
+                        )
+
+                    except (
+                        ArchivoInvalidoError,
+                        OSError,
+                        ValueError,
+                        KeyError
+                    ) as error:
+
+                        print(f"Error al cargar evoluciones: {error}")
+
+        # E5: ABM persistente
+        elif opcion == "6":
+
+            equipo = menu_equipo(equipo, catalogo)
+
+        # E6: Pila
         elif opcion == "7":
 
-            entrada = input("Ingrese el ID del Pokémon a eliminar: ").strip()
-
-            if not entrada.isdigit():
-
-                print("Debe ingresar un ID numérico.")
-
-            else:
-
-                id_buscado = int(entrada)
-
-                pokemon_a_eliminar = None
-
-                for pokemon in equipo:
-
-                    if pokemon.numero == id_buscado:
-
-                        pokemon_a_eliminar = pokemon
-                        break
-
-                if pokemon_a_eliminar is None:
-
-                    print("Ese Pokémon no se encuentra en el equipo.")
-
-                else:
-
-                    equipo.eliminar(pokemon_a_eliminar)
-
-                    try:
-
-                        guardar_equipo_binario(equipo)
-
-                        print(f"Pokémon eliminado: {pokemon_a_eliminar}")
-                        print("Cambio guardado correctamente.")
-
-                    except (ArchivoInvalidoError, OSError) as error:
-
-                        print(
-                            f"El Pokémon se eliminó del equipo, "
-                            f"pero no se pudo guardar: {error}"
-                        )
-
-        # E5: Modificar el HP de un Pokémon del equipo
-        elif opcion == "8":
-
-            entrada = input("Ingrese el ID del Pokémon a modificar: ").strip()
-
-            if not entrada.isdigit():
-
-                print("Debe ingresar un ID numérico.")
-
-            else:
-
-                id_buscado = int(entrada)
-
-                entrada_hp = input("Ingrese el nuevo HP: ").strip()
-
-                if not entrada_hp.isdigit():
-
-                    print("El HP debe ser un número entero positivo.")
-
-                else:
-
-                    nuevo_hp = int(entrada_hp)
-
-                    try:
-
-                        modificado = modificar_hp_equipo(
-                            id_buscado,
-                            nuevo_hp
-                        )
-
-                        if modificado:
-
-                            # Recuperamos el equipo con los datos actualizados
-                            equipo = cargar_equipo_binario()
-
-                            print("HP modificado correctamente.")
-                            print("Cambio guardado en el archivo binario.")
-
-                        else:
-
-                            print("Ese Pokémon no se encuentra en el equipo.")
-
-                    except (ValueError, ArchivoInvalidoError, OSError) as error:
-
-                        print(f"Error al modificar el Pokémon: {error}")
-
-        # E5: Guardar y cargar archivos
-        elif opcion == "9":
-
-            print("\n--- Guardar / Cargar Archivos ---")
-            print("1. Cargar catálogo desde TXT")
-            print("2. Guardar catálogo en TXT")
-            print("3. Guardar catálogo en binario")
-            print("4. Cargar catálogo desde binario")
+            print("\n========== HISTORIAL (PILA) ==========")
+            print("1. Apilar Pokémon")
+            print("2. Desapilar Pokémon")
             print("0. Volver")
 
-            subopcion = input("> ").strip()
+            accion = input("> ").strip()
 
-            try:
+            if accion == "1":
 
-                if subopcion == "1":
+                entrada = input("Ingrese el ID del Pokémon: ").strip()
 
-                    catalogo = armar_catalogo_desde_txt()
+                if not entrada.isdigit():
 
-                    print(
-                        f"Catálogo cargado desde TXT: "
-                        f"{catalogo.tamanio()} Pokémon."
-                    )
-
-                elif subopcion == "2":
-
-                    filas = filas_del_catalogo(catalogo)
-
-                    guardar_texto(
-                        RUTA_POKEDEX,
-                        filas,
-                        ENCABEZADOS
-                    )
-
-                    print("Catálogo guardado correctamente en TXT.")
-
-                elif subopcion == "3":
-
-                    guardar_binario(
-                        RUTA_BIN,
-                        catalogo
-                    )
-
-                    print("Catálogo guardado correctamente en binario.")
-
-                elif subopcion == "4":
-
-                    catalogo = cargar_binario(RUTA_BIN)
-
-                    print(
-                        f"Catálogo cargado desde binario: "
-                        f"{catalogo.tamanio()} Pokémon."
-                    )
-
-                elif subopcion == "0":
-
-                    continue
+                    print("Debe ingresar un ID numérico.")
 
                 else:
 
-                    print("Opción inválida.")
+                    id_buscado = int(entrada)
 
-            except ArchivoInvalidoError as error:
+                    pokemon = obtener_pokemon_por_id(
+                        catalogo,
+                        id_buscado
+                    )
 
-                print(f"Error de archivo: {error}")
+                    if pokemon is None:
+
+                        print("No se encontró un Pokémon con ese ID.")
+
+                    else:
+
+                        pila_historial.apilar(pokemon)
+
+                        print(f"Apilado: {pokemon}")
+
+            elif accion == "2":
+
+                try:
+
+                    item = pila_historial.desapilar()
+
+                    print(f"Desapilado: {item}")
+
+                except PilaVaciaError as error:
+
+                    print(f"Error: {error}")
+
+            elif accion != "0":
+
+                print("Opción inválida.")
+
+        # E6: Cola
+        elif opcion == "8":
+
+            print("\n========== TURNOS (COLA) ==========")
+            print("1. Encolar Pokémon")
+            print("2. Desencolar Pokémon")
+            print("0. Volver")
+
+            accion = input("> ").strip()
+
+            if accion == "1":
+
+                entrada = input("Ingrese el ID del Pokémon: ").strip()
+
+                if not entrada.isdigit():
+
+                    print("Debe ingresar un ID numérico.")
+
+                else:
+
+                    id_buscado = int(entrada)
+
+                    pokemon = obtener_pokemon_por_id(
+                        catalogo,
+                        id_buscado
+                    )
+
+                    if pokemon is None:
+
+                        print("No se encontró un Pokémon con ese ID.")
+
+                    else:
+
+                        cola_turnos.encolar(pokemon)
+
+                        print(f"Encolado: {pokemon}")
+
+            elif accion == "2":
+
+                try:
+
+                    item = cola_turnos.desencolar()
+
+                    print(f"Turno atendido: {item}")
+
+                except ColaVaciaError as error:
+
+                    print(f"Error: {error}")
+
+            elif accion != "0":
+
+                print("Opción inválida.")
+
+        # E5: Archivos
+        elif opcion == "9":
+
+            catalogo = menu_archivos(catalogo)
+
+        else:
+
+            print("Opción inválida.")
 
 
-# E5: Recuperar el equipo al iniciar el programa
+# Recuperar el equipo guardado
 try:
 
     equipo = cargar_equipo_binario()
@@ -404,4 +579,4 @@ except (ArchivoInvalidoError, OSError) as error:
 pila_historial = Pila()
 cola_turnos = Cola()
 
-menu_coleccion(equipo, pila_historial, cola_turnos, catalogo)
+menu_principal(equipo, pila_historial, cola_turnos, catalogo)
