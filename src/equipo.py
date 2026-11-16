@@ -1,6 +1,7 @@
 from src.tads.lista_enlazada import ListaEnlazada
 from src.excepciones import ColeccionLlenaError
 
+
 class Equipo:
 
     def __init__(self, tope=6):
@@ -21,4 +22,7 @@ class Equipo:
 
     def eliminar(self, pokemon):
         self._pokemones.eliminar(pokemon)
+
+    def __iter__(self):
+        return iter(self._pokemones)
         

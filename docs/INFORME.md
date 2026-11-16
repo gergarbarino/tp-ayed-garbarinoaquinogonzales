@@ -70,9 +70,101 @@ Los algoritmos de selección e inserción presentaron aumentos de tiempo más im
 
 ## 6. Persistencia (E5)
 
-- Layout del registro binario (campos, `struct`, anchos):
-- Header:
-- Cómo se actualiza un registro por posición:
+### Archivos de texto
+
+Se implementaron funciones para leer y escribir archivos de texto en `src/persistencia/texto.py`.
+
+El archivo `data/pokedex.txt` contiene los datos de los Pokémon separados por comas, con un encabezado que identifica los campos.
+
+La función `cargar_texto()` lee los registros y devuelve una lista de diccionarios.
+
+La función `guardar_texto()` permite guardar los datos nuevamente.
+
+Se comprobó que los 70 Pokémon pueden guardarse y recuperarse sin perder información.
+
+### Archivos binarios
+
+Se implementaron funciones de persistencia binaria utilizando el módulo `struct` de Python.
+
+El archivo binario contiene una cabecera y registros de longitud fija.
+
+**Cabecera:**
+
+Formato: `<4s 1s I`
+
+| Campo | Tipo | Tamaño | Descripción |
+| --- | --- | --- | --- |
+| Magia | 4s | 4 bytes | Identificador `AYED` |
+| Tema | 1s | 1 byte | Identificador `P` (Pokédex) |
+| Cantidad | I | 4 bytes | Cantidad de registros |
+
+Tamaño total de la cabecera: **9 bytes**.
+
+**Registro de Pokémon:**
+
+Formato: `<I 20s 12s 12s 5H`
+
+| Campo | Tipo | Tamaño |
+| --- | --- | --- |
+| ID | I | 4 bytes |
+| Nombre | 20s | 20 bytes |
+| Tipo 1 | 12s | 12 bytes |
+| Tipo 2 | 12s | 12 bytes |
+| HP | H | 2 bytes |
+| Ataque | H | 2 bytes |
+| Defensa | H | 2 bytes |
+| Velocidad | H | 2 bytes |
+| Generación | H | 2 bytes |
+
+Tamaño de cada registro: **58 bytes**.
+
+Para 70 Pokémon, el tamaño total del archivo es:
+
+9 + (70 × 58) = **4069 bytes**.
+
+### Actualización mediante seek()
+
+Se implementó la función `actualizar_registro()` para modificar un registro binario por su posición.
+
+La posición comienza desde 0.
+
+Para calcular dónde comienza un registro se utiliza:
+
+`desplazamiento = 9 + posicion * 58`
+
+Donde:
+
+- 9 representa el tamaño de la cabecera.
+- posicion es el índice del registro.
+- 58 representa el tamaño de cada registro.
+
+La función `seek()` mueve el cursor del archivo hasta la posición calculada.
+
+Luego se escribe el registro actualizado sin modificar los demás.
+
+Se probó modificando el HP de Bulbasaur de 45 a 99. Los otros 69 registros permanecieron sin cambios.
+
+### ABM persistente del equipo
+
+Se implementaron operaciones de Alta, Baja y Modificación sobre el equipo Pokémon.
+
+- **Alta:** permite agregar un Pokémon y guardar el equipo en `data/equipo.bin`.
+- **Baja:** permite eliminar un Pokémon del equipo y guardar el cambio.
+- **Modificación:** permite cambiar el HP de un Pokémon utilizando `actualizar_registro()` y `seek()`.
+
+En las operaciones de alta y baja desde el menú se guarda nuevamente el equipo completo. La modificación del HP se realiza directamente sobre el registro binario correspondiente.
+
+Cuando se inicia el programa, el equipo se recupera automáticamente desde el archivo binario.
+
+Se comprobó que los cambios se conservan después de cerrar y volver a ejecutar la Pokédex.
+
+### Validación de archivos
+
+Se incorporaron controles para detectar archivos inexistentes o inválidos.
+
+En los archivos binarios se verifica la cabecera, la cantidad de registros y el tamaño de los datos.
+
+Cuando se detecta un archivo inválido, se utiliza la excepción `ArchivoInvalidoError`.
 
 ## 7. Reparto de trabajo (E6)
 

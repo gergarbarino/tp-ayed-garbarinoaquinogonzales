@@ -20,6 +20,6 @@ Mínimos: 8 casos escritos en E2; ejecutados en E3; 15 de regresión en E6 (pila
 | P10 | E4 | Búsqueda lineal de un nombre que no existe |  | no encontrado, sin traceback | `pasa` |  |
 | P11 | E4 | Búsqueda binaria con catálogo desordenado |  | avisa o reordena; no da un falso hit | `pasa` | Reordena por ID antes de realizar la búsqueda binaria y encuentra a Pikachu. |
 | P12 | E4 | Ordenar por un criterio y después por otro |  | el orden cambia |  |  |
-| P13 | E5 | Guardar CSV, salir, volver a entrar |  | los datos siguen |  |  |
-| P14 | E5 | Guardar binario y modificar un registro por id |  | al recargar, ese campo cambió |  |  |
-| P15 | E5 | Abrir un binario truncado o con magia mala | archivo basura | excepción de archivo inválido |  |  |
+| P13 | E5 | Guardar el catálogo en TXT, salir y volver a cargarlo desde el menú | 70 Pokémon | Se recuperan los 70 Pokémon sin perder información | `pasa` | Se comprobó que los datos originales y los recuperados coinciden. |
+| P14 | E5 | Guardar el catálogo en binario y modificar el HP de un Pokémon | Bulbasaur, ID 1, HP de 45 a 99 | Se modifica el registro y los demás permanecen sin cambios | `pasa` | Se utilizó actualizar_registro() con seek(). Los otros 69 registros no cambiaron. |
+| P15 | E5 | Intentar cargar un archivo binario inválido | Archivo de prueba con cabecera inválida | Se produce ArchivoInvalidoError | `pasa` | Se comprobó la detección de un archivo inválido. |
